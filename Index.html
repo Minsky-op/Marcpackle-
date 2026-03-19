@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Marcpackle | Elite</title>
+    <script src="https://cdn.jsdelivr.net/npm/@titaniumnetwork-dev/ultraviolet@3.2.5/dist/uv.bundle.js" defer></script>
+    <style>
+        :root { --bg: #0b0b0b; --accent: #00ff88; --panel: rgba(255, 255, 255, 0.05); --nav-h: 60px; --text: #ffffff; }
+        .theme-blue { --accent: #00d4ff; --bg: #050a10; }
+        .theme-red { --accent: #ff4747; --bg: #120505; }
+        .theme-purple { --accent: #b947ff; --bg: #0d0512; }
+        body, html { margin: 0; padding: 0; height: 100%; background: var(--bg); color: var(--text); font-family: 'Segoe UI', sans-serif; overflow: hidden; transition: background 0.4s ease; }
+        nav { height: var(--nav-h); background: #111; display: flex; align-items: center; padding: 0 20px; border-bottom: 1px solid #333; z-index: 1000; }
+        .tabs { display: flex; gap: 10px; margin-left: 20px; }
+        .tab { padding: 8px 15px; background: #222; border-radius: 5px; cursor: pointer; transition: 0.3s; font-size: 14px; border: none; color: white; }
+        .tab.active { background: var(--accent); color: black; font-weight: bold; }
+        .settings-wrapper { margin-left: auto; display: flex; align-items: center; flex-direction: row-reverse; }
+        .settings-icon { font-size: 24px; cursor: pointer; user-select: none; display: inline-block; transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); z-index: 2002; }
+        .settings-icon.open { transform: rotate(180deg); }
+        .settings-menu { display: flex; flex-direction: row; gap: 10px; background: #181818; border: 1px solid var(--accent); padding: 8px 15px; border-radius: 25px; margin-right: 15px; opacity: 0; transform: translateX(50px); pointer-events: none; transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 0 5px 20px rgba(0,0,0,0.5); }
+        .settings-menu.active { opacity: 1; transform: translateX(0); pointer-events: all; }
+        .settings-menu button { background: #222; color: white; border: 1px solid #333; padding: 5px 12px; border-radius: 15px; cursor: pointer; font-size: 12px; white-space: nowrap; transition: 0.2s; }
+        .fern-container { height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; background: radial-gradient(circle at center, #1a1a1a 0%, #0b0b0b 100%); }
+        .fern-logo { font-size: 70px; font-family: 'Brush Script MT', cursive; margin-bottom: 30px; opacity: 0.9; }
+        .fern-search-wrap { position: relative; width: 500px; margin-bottom: 40px; }
+        .fern-search { width: 100%; padding: 15px 25px; background: rgba(20, 20, 20, 0.8); border: 2px solid #333; border-radius: 12px; color: white; font-size: 18px; outline: none; }
+        .fern-search:focus { border-color: var(--accent); box-shadow: 0 0 15px var(--accent); }
+        .search-line { position: absolute; top: 0; right: 0; width: 40%; height: 2px; background: var(--accent); }
+        .app-grid { display: grid; grid-template-columns: repeat(4, 110px); gap: 15px; }
+        .app-card { background: var(--panel); border-radius: 12px; height: 110px; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; transition: 0.2s; border: 1px solid rgba(255,255,255,0.05); }
+        .app-card:hover { border-color: var(--accent); transform: translateY(-5px); }
+        .app-card img { width: 35px; height: 35px; margin-bottom: 8px; }
+        .bottom-trigger { position: fixed; bottom: 0; width: 100%; height: 20px; z-index: 998; }
+        .controls { position: fixed; bottom: -110px; left: 50%; transform: translateX(-50%); width: 60%; background: rgba(20, 20, 20, 0.95); backdrop-filter: blur(10px); padding: 15px; border-radius: 15px 15px 0 0; display: flex; gap: 10px; border: 1px solid var(--accent); transition: 0.4s cubic-bezier(0.18, 0.89, 0.32, 1.28); z-index: 999; }
+        .bottom-trigger:hover + .controls, .controls:hover { bottom: 0; }
+        .controls input { flex: 1; padding: 12px; border-radius: 20px; border: none; background: #333; color: white; outline: none; }
+        .container { height: calc(100vh - var(--nav-h)); position: relative; }
+        .view { display: none; width: 100%; height: 100%; }
+        .view.active { display: block; }
+        iframe { width: 100%; height: 100%; border: none; background: #fff; }
+    </style>
+</head>
+<body id="main-body">
+
+    <nav>
+        <div style="font-weight: bold; color: var(--accent);">MARCPACKLE</div>
+        <div class="tabs">
+            <button class="tab active" onclick="switchTab('games', this)">Home</button>
+            <button class="tab" onclick="switchTab('web', this)">Web</button>
+            <button class="tab" onclick="switchTab('music', this)">Music</button>
+        </div>
+        <div class="settings-wrapper">
+            <div class="settings-icon" id="gear-btn">⚙️</div>
+            <div class="settings-menu" id="settings-popup">
+                <button onclick="applyTheme('theme-blue')">Blue</button>
+                <button onclick="applyTheme('theme-red')">Red</button>
+                <button id="leave-toggle" onclick="toggleLeave()">Leave: OFF</button>
+                <button onclick="activateBlob()">Cloak</button>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div id="games-view" class="view active">
+            <div class="fern-container">
+                <div class="fern-logo">Marcpackle</div>
+                <div class="fern-search-wrap">
+                    <div class="search-line"></div>
+                    <input type="text" class="fern-search" id="home-search" placeholder="search DuckDuckGo...">
+                </div>
+                <div class="app-grid">
+                    <div class="app-card" onclick="webLaunch('https://youtube.com')"><img src="https://cdn-icons-png.flaticon.com/512/1384/1384060.png"><span>YouTube</span></div>
+                    <div class="app-card" onclick="webLaunch('https://discord.com')"><img src="https://cdn-icons-png.flaticon.com/512/5968/5968756.png"><span>Discord</span></div>
+                    <div class="app-card" onclick="webLaunch('https://google.com')"><img src="https://cdn-icons-png.flaticon.com/512/2991/2991148.png"><span>Google</span></div>
+                    <div class="app-card" onclick="webLaunch('https://roblox.com')"><img src="https://cdn-icons-png.flaticon.com/512/825/825590.png"><span>Roblox</span></div>
+                </div>
+            </div>
+        </div>
+        <div id="web-view" class="view">
+            <iframe id="main-screen" src="about:blank"></iframe>
+            <div class="bottom-trigger"></div>
+            <div class="controls">
+                <button onclick="document.getElementById('main-screen').contentWindow.history.back()">⬅️</button>
+                <input type="text" id="url-input" placeholder="Search DuckDuckGo or Enter URL...">
+                <button onclick="webGo()" style="background:var(--accent); border:none; padding:10px 20px; border-radius:20px; cursor:pointer; color:black; font-weight:bold;">Go</button>
+            </div>
+        </div>
+        <div id="music-view" class="view">
+            <div style="padding:50px; text-align:center;">Music Section Ready</div>
+        </div>
+    </div>
+
+    <script>
+        let leaveProtect = false;
+
+        function switchTab(id, btn) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+            btn.classList.add('active');
+            document.getElementById(id + '-view').classList.add('active');
+        }
+
+        async function webLaunch(url) {
+            const frame = document.getElementById('main-screen');
+            switchTab('web', document.querySelectorAll('.tab')[1]);
+
+            try {
+                // Pointing to your separate sw.js file for GitHub Pages
+                await navigator.serviceWorker.register('./sw.js', { scope: '/service/' });
+                const encodedUrl = encodeURIComponent(url);
+                frame.src = window.location.origin + '/service/' + encodedUrl;
+            } catch(e) {
+                console.error("UV Failed:", e);
+                frame.src = url; 
+            }
+        }
+
+        function webGo() {
+            let val = document.getElementById('url-input').value || document.getElementById('home-search').value;
+            if (!val) return;
+            if (!val.includes('.')) val = 'https://duckduckgo.com/?q=' + encodeURIComponent(val);
+            if (!val.startsWith('http')) val = 'https://' + val;
+            webLaunch(val);
+        }
+
+        const gear = document.getElementById('gear-btn');
+        const menu = document.getElementById('settings-popup');
+        gear.onclick = (e) => { menu.classList.toggle('active'); gear.classList.toggle('open'); e.stopPropagation(); };
+        window.onclick = () => { menu.classList.remove('active'); gear.classList.remove('open'); };
+
+        function applyTheme(t) { document.getElementById('main-body').className = t; }
+
+        function toggleLeave() {
+            leaveProtect = !leaveProtect;
+            const btn = document.getElementById('leave-toggle');
+            btn.innerText = leaveProtect ? "leave protection on!" : "Leave: OFF";
+            btn.style.color = leaveProtect ? "var(--accent)" : "white";
+        }
+
+        window.addEventListener('beforeunload', (e) => { if (leaveProtect) { e.preventDefault(); e.returnValue = ''; } });
+
+        function activateBlob() {
+            const blob = new Blob([document.documentElement.outerHTML], {type: 'text/html'});
+            window.location.replace(URL.createObjectURL(blob));
+        }
+
+        document.getElementById('home-search').addEventListener('keypress', (e) => { if(e.key === 'Enter') webGo(); });
+        document.getElementById('url-input').addEventListener('keypress', (e) => { if(e.key === 'Enter') webGo(); });
+    </script>
+</body>
+</html>
